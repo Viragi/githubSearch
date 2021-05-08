@@ -13,7 +13,9 @@ class App extends React.Component{
     super(props)
     this.state = {
       searchTerm : "",
-      userNameList : []
+      userNameList : [],
+      totalCount : 0,
+      activePage: 1
     }
   }
 
@@ -26,14 +28,31 @@ class App extends React.Component{
   handleSearch = async () => {
 
     if (this.state.searchTerm.trim().length == 0){
-      console.log("In if");
       return
     }
-    console.log("here");
     let res = await axios.get(`https://api.github.com/search/users?q=${this.state.searchTerm}&per_page=${USER_PER_PAGE}&page=3`);
-    console.log(res, "res here");
+    this.setState({
+      ...this.state,
+      userNameList: res.data.items,
+      totalCount: res.data.total_count
+    })
   }
 
+  handleActivePage = (arr) =>{
+    let newActivePage = this.state.activePage;
+    if (arr[0] || arr[2]) {
+      newActivePage = arr[0] ? newActivePage - 1 : newActivePage + 1;
+      if (newActivePage < 1 || newActivePage  > this.state.totalCount / 10 ) {
+        return;
+      }
+    } else {
+      newActivePage = arr[1];
+    }
+    
+    this.setState({
+      ...this.state, activePage: +newActivePage
+    })
+  }
   render(){
     return (
       <div className="App">
@@ -45,10 +64,10 @@ class App extends React.Component{
                 value = {this.state.searchTerm}
                 required
               />
-              <Button as="input"  value="Search" onClick = {this.handleSearch}/>
+              <Button onClick = {this.handleSearch}>SEARCH </Button>
         </Form>
         <DisplayUserNames/>
-        <PaginationComponent/>
+        <PaginationComponent totalCount = {this.state.totalCount} activePage= {this.state.activePage} handleActivePage = {this.handleActivePage}/>
       </div>
     );
   }
