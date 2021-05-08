@@ -7,7 +7,7 @@ import DisplayUserNames from './components/DisplayUserNames';
 import PaginationComponent from './components/PaginationComponent';
 
 
-const USER_PER_PAGE = 10;
+const USER_PER_PAGE = 30;
 class App extends React.Component{
   constructor(props){
     super(props)
@@ -25,12 +25,15 @@ class App extends React.Component{
       searchTerm: e.target.value
     })
   }
+  queryGithub = async (searchTerm, activePage) => {
+    let res = await axios.get(`https://api.github.com/search/users?q=${searchTerm}&per_page=${USER_PER_PAGE}&page=${activePage}`);
+    return res;
+  }
   handleSearch = async () => {
-
     if (this.state.searchTerm.trim().length == 0){
       return
     }
-    let res = await axios.get(`https://api.github.com/search/users?q=${this.state.searchTerm}&per_page=${USER_PER_PAGE}&page=3`);
+    let res = await this.queryGithub(this.state.searchTerm, this.state.activePage);
     this.setState({
       ...this.state,
       userNameList: res.data.items,
@@ -38,7 +41,7 @@ class App extends React.Component{
     })
   }
 
-  handleActivePage = (arr) =>{
+  handleActivePage = async (arr) =>{
     let newActivePage = this.state.activePage;
     if (arr[0] || arr[2]) {
       newActivePage = arr[0] ? newActivePage - 1 : newActivePage + 1;
@@ -48,9 +51,9 @@ class App extends React.Component{
     } else {
       newActivePage = arr[1];
     }
-    
+    let res = await this.queryGithub(this.state.searchTerm, newActivePage);
     this.setState({
-      ...this.state, activePage: +newActivePage
+      ...this.state, activePage: +newActivePage, userNameList: res.data.items
     })
   }
   render(){
@@ -66,7 +69,7 @@ class App extends React.Component{
               />
               <Button onClick = {this.handleSearch}>SEARCH </Button>
         </Form>
-        <DisplayUserNames/>
+        <DisplayUserNames userNameList = {this.state.userNameList}/>
         <PaginationComponent totalCount = {this.state.totalCount} activePage= {this.state.activePage} handleActivePage = {this.handleActivePage}/>
       </div>
     );
