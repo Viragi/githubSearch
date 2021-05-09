@@ -1,31 +1,32 @@
 import React from 'react';
-import Media from "react-bootstrap/Media";
-import axios from 'axios';
+import Card from "react-bootstrap/Card";
+import '../App.css';
 
 function DisplayUserNames(props){
+    function handleClick(url){
+        window.open(url,"_new");
+    }
     let reqlist = props.userNameList.map((item)=> {
-    console.log("item here", item);
        return(
-            <Media>
-            <img
-              width={64}
-              height={64}
-              className="align-self-start mr-3"
-              src={item.avatar_url}
-              alt="Generic placeholder"
-            />
-            <Media.Body>
-                <h5>{item.login}</h5>
-                <p>Following: {item.followers_url}</p>
-            </Media.Body>
-          </Media>
-        
+            <Card style={{ width: '10rem' }} onClick = {()=>handleClick(item.html_url)}>
+                    <Card.Img variant="top" src= {item.avatar_url} />
+                    <Card.Body>
+                    <Card.Title>{item.login}</Card.Title>
+                    <Card.Text>
+                        Followers: {item.followers_count}
+                    
+                    </Card.Text>
+                    </Card.Body>
+             </Card>
         )
-     })
+     });
     return(
-        <div>
+        <>
+        <h5 className = "spacingAround"> {props.totalCount}, User name result</h5>
+        <div className = "userList">
             {reqlist}
         </div>
+        </>
     )
 
 }
