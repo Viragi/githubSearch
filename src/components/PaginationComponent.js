@@ -1,34 +1,35 @@
-import {React,useState} from 'react';
+import React from 'react';
 import Pagination from "react-bootstrap/Pagination";
 
-const USER_PER_PAGE = 20;
+const USER_PER_PAGE = 10;
 export default function PaginationComponent(props){
-    const [startPageNo, setStartPageNo] = useState(1)
-    let totalpages = Math.floor(1000/USER_PER_PAGE);
-    let activePage = props.activePage;
     
-    const handlePageNum  = (dir) =>{
-        if (dir == 'left') {
-            if (startPageNo == 1) return
-            setStartPageNo(startPageNo-10)
+    let totalpages = Math.ceil(props.totalCount/USER_PER_PAGE); 
+
+    const handlePageDir  = (isLeft) =>{
+        if (isLeft) {
+            props.handleActivePage(props.activePage-1)
         } else {
-            if (startPageNo+10 > totalpages) return
-            setStartPageNo(startPageNo + 10)
+            props.handleActivePage(props.activePage+1)
         }
     }
-    const handleClick = (arr) => {
-       props.handleActivePage(arr);
+    const handleClick = (pageNo) => {
+       props.handleActivePage(pageNo);
     }
-    
-    let reqComp = new Array(10).fill(1).map((item,i)=>{
-        return( <Pagination.Item active = {activePage == i+1} key = {`${i}pg`} onClick = {(e)=>handleClick(e.target.innerText)}> {startPageNo+i} </Pagination.Item>)
-    });
-    
+
+    let paginationItems  = [];
+    let startIndex = Math.max(1,props.activePage-5);
+    let endIndex = Math.min(startIndex + 9, totalpages);
+    for (let i = startIndex; i <= endIndex; i++) {
+        paginationItems.push(<Pagination.Item active = {props.activePage == i} key = {`${i}pg`} onClick = {(e)=>handleClick(e.target.innerText)}> {i} </Pagination.Item>);
+    }
     return(
-        <Pagination>
-            <Pagination.First onClick = {()=>handlePageNum("left")}/>
-                {reqComp}
-            <Pagination.Last onClick = {()=>handlePageNum("right")}/>
-        </Pagination>
+        <div className = "center spacingAround">
+            <Pagination>
+                <Pagination.Prev className = {props.activePage == 1 ? "disabled" : ""}  onClick = {()=>handlePageDir(true)}/>
+                    {paginationItems}
+                <Pagination.Next className = {props.activePage == totalpages ? "disabled" : ""} onClick = {()=>handlePageDir(false)}/>
+            </Pagination>
+        </div>
     )
 }
