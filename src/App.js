@@ -1,77 +1,118 @@
 import React from 'react';
 import './App.css';
-import Form from "react-bootstrap/Form";
+import InputGroup from "react-bootstrap/InputGroup";
+import FormControl from "react-bootstrap/FormControl";
 import Button from "react-bootstrap/Button";
 import axios from 'axios';
-import DisplayUserNames from './components/DisplayUserNames';
+import UserList from './components/UserList';
 import PaginationComponent from './components/PaginationComponent';
+import { Container, Row } from 'react-bootstrap';
+import config from './config';
 
+const USER_PER_PAGE = 10;
+const INITIALSTATE = {searchTerm : "", 
+                      userNameList : [],
+                      totalCount : 0,
+                      activePage: 1,
+                      error: false
+                     }
 
-const USER_PER_PAGE = 30;
 class App extends React.Component{
   constructor(props){
     super(props)
-    this.state = {
-      searchTerm : "",
-      userNameList : [],
-      totalCount : 0,
-      activePage: 1
-    }
-  }
-
-  handleInput = (e) => {
+    this.state = INITIALSTATE}
+     handleInput = (e) => {
     this.setState({
       ...this.state,
       searchTerm: e.target.value
     })
   }
+
   queryGithub = async (searchTerm, activePage) => {
-    let res = await axios.get(`https://api.github.com/search/users?q=${searchTerm}&per_page=${USER_PER_PAGE}&page=${activePage}`);
-    return res;
+    try {
+      let res = await axios.get(`https://api.github.com/search/users?q=${searchTerm}&per_page=${USER_PER_PAGE}&page=${activePage}`,config);
+      return res;
+    }catch(e) {
+      return null
+    }
   }
+  handleStateReset = () => {
+    this.setState(INITIALSTATE)
+  }
+  
   handleSearch = async () => {
     if (this.state.searchTerm.trim().length == 0){
+      this.setState({
+        ...this.state,
+        error:"Enter search term"
+      });
       return
     }
+
     let res = await this.queryGithub(this.state.searchTerm, this.state.activePage);
-    this.setState({
-      ...this.state,
-      userNameList: res.data.items,
-      totalCount: res.data.total_count
-    })
+
+    let items = res && res.data.items;
+    if (typeof items == 'undefined' || items.length == 0) {
+      this.setState({
+        ...this.state,
+        userNameList: [],
+        totalCount: 0,
+        error:"No results found."
+      });
+    } else {
+      this.setState({
+        ...this.state,
+        userNameList: items,
+        totalCount: res.data.total_count,
+        error:null,
+        activePage:1
+      })  
+    }
+
   }
 
-  handleActivePage = async (arr) =>{
-    let newActivePage = this.state.activePage;
-    if (arr[0] || arr[2]) {
-      newActivePage = arr[0] ? newActivePage - 1 : newActivePage + 1;
-      if (newActivePage < 1 || newActivePage  > this.state.totalCount / 10 ) {
-        return;
-      }
-    } else {
-      newActivePage = arr[1];
+  handleEnterKey = (event) => {
+    if (event.charCode === 13) {
+      this.handleSearch();
     }
-    let res = await this.queryGithub(this.state.searchTerm, newActivePage);
+  }
+
+  handleActivePage = async (num) =>{
+    let res = await this.queryGithub(this.state.searchTerm, num);
+    res = res && res.data.items;
+    let newError = false;
+    if (res == undefined) {
+      res = this.state.userNameList;
+      newError = true
+    }
     this.setState({
-      ...this.state, activePage: +newActivePage, userNameList: res.data.items
+      ...this.state, activePage: +num, userNameList: res ,error:newError
     })
   }
   render(){
     return (
-      <div className="App">
-        <Form>
-          <Form.Control
-                type="text"
-                placeholder="Search Github UserName"
-                onChange = {this.handleInput}
-                value = {this.state.searchTerm}
-                required
-              />
-              <Button onClick = {this.handleSearch}>SEARCH </Button>
-        </Form>
-        <DisplayUserNames userNameList = {this.state.userNameList}/>
-        <PaginationComponent totalCount = {this.state.totalCount} activePage= {this.state.activePage} handleActivePage = {this.handleActivePage}/>
-      </div>
+      <Container>
+        <Row ><h4 className = "spacingAround"  onClick = {this.handleStateReset}> GitHub User Search</h4></Row>
+        <Row>
+          <InputGroup className= "mb-4 ml-4 mr-4">
+            <FormControl
+              placeholder="Github username"
+              onChange = {this.handleInput} value = {this.state.searchTerm}
+              onKeyPress={this.handleEnterKey}
+            />
+            <InputGroup.Append>
+              <Button variant="outline-secondary" onClick = {this.handleSearch}>Search</Button>
+            </InputGroup.Append>
+          </InputGroup>
+        </Row>
+        <Row>
+          { this.state.error}
+          { this.state.userNameList.length > 0 && (<div className = "displayList">
+            <UserList userNameList = {this.state.userNameList} totalCount = {this.state.totalCount}/>
+            <PaginationComponent totalCount = {this.state.totalCount} activePage= {this.state.activePage} handleActivePage = {this.handleActivePage}/>
+          </div>) }
+        </Row>
+      </Container>
     );
   }
 }
