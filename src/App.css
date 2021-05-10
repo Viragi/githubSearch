@@ -1,0 +1,33 @@
+.App {
+  text-align: center;
+}
+
+.userList {
+    display: flex ;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.displayList {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.center{
+    display: flex;
+    justify-content: center;
+}
+.spacingAround {
+    padding : 15px
+}
+
+input {
+    width: 50%;
+}
+
+h4 {
+    color: cornflowerblue;
+}
+h4:hover{
+    cursor: pointer;
+}
