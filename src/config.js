@@ -1,4 +1,5 @@
-const token = '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';
+const token = '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';
+
 const config = {
     headers: { Authorization: `token ${token}` }
   };

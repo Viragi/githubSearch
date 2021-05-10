@@ -20,8 +20,9 @@ const INITIALSTATE = {searchTerm : "",
 class App extends React.Component{
   constructor(props){
     super(props)
-    this.state = INITIALSTATE}
-     handleInput = (e) => {
+    this.state = INITIALSTATE
+  }
+  handleInput = (e) => {
     this.setState({
       ...this.state,
       searchTerm: e.target.value
@@ -29,8 +30,10 @@ class App extends React.Component{
   }
 
   queryGithub = async (searchTerm, activePage) => {
+    console.log(searchTerm, activePage);
     try {
-      let res = await axios.get(`https://api.github.com/search/users?q=${searchTerm}&per_page=${USER_PER_PAGE}&page=${activePage}`,config);
+      let url = `https://api.github.com/search/users?q=${searchTerm}&per_page=${USER_PER_PAGE}&page=${activePage}`;
+      let res = await axios.get(url,config);
       return res;
     }catch(e) {
       return null
@@ -39,7 +42,7 @@ class App extends React.Component{
   handleStateReset = () => {
     this.setState(INITIALSTATE)
   }
-  
+
   handleSearch = async () => {
     if (this.state.searchTerm.trim().length == 0){
       this.setState({
@@ -50,9 +53,8 @@ class App extends React.Component{
     }
 
     let res = await this.queryGithub(this.state.searchTerm, this.state.activePage);
-
     let items = res && res.data.items;
-    if (typeof items == 'undefined' || items.length == 0) {
+    if (!items  || items.length == 0) {
       this.setState({
         ...this.state,
         userNameList: [],
